@@ -1,3 +1,4 @@
+//Maybe have a bounce value array given by runtime calc?
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
@@ -5,17 +6,20 @@
 #include <ncurses.h>
 
 #define MAX_DY 7
-#define DENSITY 20
+#define DENSITY 60
+#define RADIUS 4
 
 typedef struct CHAR_STRUCT {
     //Opacity?
     char ch;
-    int dy;
     int x;
     int y;
+    int dy;
     struct CHAR_STRUCT *next;
     struct CHAR_STRUCT *prev;
 } char_n;
+
+char_n *player;
 
 int maxX, maxY;
 char_n *head;
@@ -57,13 +61,22 @@ char_n *create_letter() {
     return ret;
 }
 
+int abs(int num) {
+    if (num*-1>=0)
+        return num*-1;
+}
+
+void move_letter(char_n *letter) {
+    mvaddch(letter->y, letter->x, letter->ch);
+}
+
 void move_letters() {
     char_n *temp = head, *next;
     //Clear
-    clear();
     for (; temp; temp=next) {
         next=temp->next;
-        mvaddch(temp->y, temp->x, temp->ch);
+        if (!(abs(player->x-temp->x)<RADIUS && abs(player->y-temp->y)<(RADIUS/2)))
+            move_letter(temp);
         temp->y+=temp->dy;
         if (temp->y > maxY)
             next=remove_linked(temp);
@@ -80,17 +93,38 @@ int main() {
     noecho();           /* Don't echo() while we do getch */
     nodelay(stdscr, true);
     curs_set(0);
+    player = (char_n *)malloc(sizeof(char_n)-2*sizeof(char_n *)-sizeof(int)); //Gotta save that heap space
+    player->x=0;player->y=0;player->ch='E'; //Best letter
 
     //Game loop
-    while (1) {
+    int state=1;
+    while (state) {
+        clear();
         for (int i=0; i<DENSITY; i++) {
             create_letter();
         }
         usleep(30000);
         move_letters();
         char enter = getch();
-        if (enter=='q')
-            break;
+
+        switch(enter) {
+            case 'w':
+                player->y--;
+                break;
+            case 'a':
+                player->x--;
+                break;
+            case 's':
+                player->y++;
+                break;
+            case 'd':
+                player->x++;
+                break;
+            case 'q':
+                state=0;
+                break;
+        }
+        move_letter(player);
         refresh();
     }
 
