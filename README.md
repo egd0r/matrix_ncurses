@@ -1,4 +1,7 @@
 # matrix_ncurses
 
-Current version, run to display command line window in which you can type letters.
-No scrolling functionality, that comes later - when I can be arsed.
+Simple matrix text scroller I made for a bit of fun.
+Clone and compile with -lncurses flag.
+
+Todo:
+-- Make scrolling text bounce off controllable one
